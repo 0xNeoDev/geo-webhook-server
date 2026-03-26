@@ -13,15 +13,19 @@ export type BountyEventType = "bounty_interest" | "bounty_allocated" | "bounty_p
 
 export type EventType = GovernanceEventType | BountyEventType
 
+export type EventCategory = "governance" | "bounty"
+
 // Fields present on every event
+// Optional fields use `?` because the Rust serializer omits None values entirely
 export interface BaseEvent {
-	version: number
+	version?: number
 	event_type: EventType
+	category?: EventCategory
 	space_id: string
-	user_space_id: string
-	idempotency_key: string
+	user_space_id?: string
+	idempotency_key?: string
 	block_number?: number // absent for proposal_rejected
-	timestamp: number
+	timestamp?: number
 }
 
 // Governance events
@@ -41,7 +45,7 @@ export interface ProposalVotedEvent extends BaseEvent {
 	event_type: "proposal_voted"
 	proposal_id: string
 	voter_id: string
-	vote: "yes" | "no" | "abstain"
+	vote: "yes" | "no" | "abstain" | "unknown"
 }
 
 export interface ProposalExecutedEvent extends BaseEvent {
