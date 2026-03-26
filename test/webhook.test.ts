@@ -53,7 +53,7 @@ function createApp() {
 			return c.text("duplicate", 409)
 		}
 
-		handleEvent(event)
+		await handleEvent(event)
 		dedup.add(event.idempotency_key)
 		return c.text("ok", 200)
 	})

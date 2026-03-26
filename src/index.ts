@@ -14,6 +14,7 @@ if (!WEBHOOK_SECRET) {
 }
 
 const PORT = Number(process.env.PORT) || 3000
+const MAX_BODY_BYTES = 64 * 1024 // 64 KB — webhook payloads are small JSON
 
 // Health check
 app.get("/health", (c) => c.json({ status: "ok" }))
@@ -28,18 +29,28 @@ app.post("/webhooks/geo", async (c) => {
 	// Read raw body for signature verification
 	const rawBody = await c.req.arrayBuffer()
 
+	if (rawBody.byteLength > MAX_BODY_BYTES) {
+		return c.text("payload too large", 413)
+	}
+
 	if (!verifySignature(rawBody, WEBHOOK_SECRET, signatureHeader)) {
 		return c.text("invalid signature", 401)
 	}
 
-	const event: GeoWebhookEvent = JSON.parse(new TextDecoder().decode(rawBody))
+	const raw = new TextDecoder().decode(rawBody)
+	console.log("[payload]", raw)
+	const event: GeoWebhookEvent = JSON.parse(raw)
+
+	if (!event.idempotency_key) {
+		return c.text("missing idempotency_key", 400)
+	}
 
 	// Idempotency check
 	if (dedup.has(event.idempotency_key)) {
 		return c.text("duplicate", 409)
 	}
 
-	handleEvent(event)
+	await handleEvent(event)
 
 	dedup.add(event.idempotency_key)
 	return c.text("ok", 200)

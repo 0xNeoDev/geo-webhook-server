@@ -2,6 +2,7 @@
 // Each handler receives a typed event and can perform side effects
 // (send push notifications, update a database, call external APIs, etc.)
 
+import { sendToDiscord } from "./discord"
 import type {
 	BountyAllocatedEvent,
 	BountyInterestEvent,
@@ -14,6 +15,8 @@ import type {
 	ProposalUpdatedEvent,
 	ProposalVotedEvent,
 } from "./types"
+
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL
 
 function handleProposalCreated(event: ProposalCreatedEvent): void {
 	console.log(
@@ -63,25 +66,44 @@ function handleBountyPayout(event: BountyPayoutEvent): void {
 	)
 }
 
-export function handleEvent(event: GeoWebhookEvent): void {
+export async function handleEvent(event: GeoWebhookEvent): Promise<void> {
 	switch (event.event_type) {
 		case "proposal_created":
-			return handleProposalCreated(event)
+			handleProposalCreated(event)
+			break
 		case "proposal_updated":
-			return handleProposalUpdated(event)
+			handleProposalUpdated(event)
+			break
 		case "proposal_voted":
-			return handleProposalVoted(event)
+			handleProposalVoted(event)
+			break
 		case "proposal_executed":
-			return handleProposalExecuted(event)
+			handleProposalExecuted(event)
+			break
 		case "proposal_settings_updated":
-			return handleProposalSettingsUpdated(event)
+			handleProposalSettingsUpdated(event)
+			break
 		case "proposal_rejected":
-			return handleProposalRejected(event)
+			handleProposalRejected(event)
+			break
 		case "bounty_interest":
-			return handleBountyInterest(event)
+			handleBountyInterest(event)
+			break
 		case "bounty_allocated":
-			return handleBountyAllocated(event)
+			handleBountyAllocated(event)
+			break
 		case "bounty_payout":
-			return handleBountyPayout(event)
+			handleBountyPayout(event)
+			break
+		default:
+			console.warn(`[unknown event_type] ${(event as { event_type: string }).event_type}`)
+	}
+
+	if (DISCORD_WEBHOOK_URL) {
+		try {
+			await sendToDiscord(DISCORD_WEBHOOK_URL, event)
+		} catch (err) {
+			console.error("[discord] failed to send, continuing", err)
+		}
 	}
 }
