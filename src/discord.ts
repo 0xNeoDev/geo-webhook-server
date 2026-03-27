@@ -35,7 +35,19 @@ function buildFields(event: GeoWebhookEvent): Array<{ name: string; value: strin
 
 	for (const [key, value] of Object.entries(event)) {
 		if (META_KEYS.has(key) || value == null) continue
-		fields.push({ name: key, value: `\`${value}\``, inline: true })
+
+		let formatted: string
+		let inline = true
+		if (typeof value === "object") {
+			// Nested objects (e.g. settings) — render as compact JSON code block
+			const json = JSON.stringify(value, null, 2)
+			formatted = `\`\`\`json\n${json.slice(0, 1014)}\n\`\`\``
+			inline = false
+		} else {
+			formatted = `\`${value}\``
+		}
+
+		fields.push({ name: key, value: formatted, inline })
 	}
 
 	return fields
