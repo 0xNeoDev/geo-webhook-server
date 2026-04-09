@@ -26,6 +26,7 @@ export interface BaseEvent {
 	idempotency_key?: string
 	block_number?: number // absent for proposal_rejected
 	timestamp?: number
+	space_name?: string // best-effort human-readable name from KG
 }
 
 // Governance events
@@ -72,6 +73,8 @@ export interface BountyInterestEvent extends BaseEvent {
 	curator_space_id: string
 	bounty_space_id: string
 	interested_user_space_id: string
+	bounty_name?: string
+	curator_name?: string
 }
 
 export interface BountyAllocatedEvent extends BaseEvent {
@@ -80,7 +83,9 @@ export interface BountyAllocatedEvent extends BaseEvent {
 	relation_id: string
 	curator_space_id: string
 	bounty_space_id: string
-	proposal_id: string
+	proposal_id?: string
+	bounty_name?: string
+	curator_name?: string
 }
 
 export interface BountyPayoutEvent extends BaseEvent {
@@ -89,7 +94,9 @@ export interface BountyPayoutEvent extends BaseEvent {
 	relation_id: string
 	curator_space_id: string
 	bounty_space_id: string
-	proposal_id: string
+	proposal_id?: string
+	bounty_name?: string
+	curator_name?: string
 }
 
 export type GeoWebhookEvent =
