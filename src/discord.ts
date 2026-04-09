@@ -72,7 +72,7 @@ function buildFields(event: GeoWebhookEvent): Array<{ name: string; value: strin
 			formatted = `[\`${value}\`](${geoSpaceUrl(value)})`;
 		} else if (key in ENTITY_FIELDS && typeof value === "string") {
 			const spaceKey = ENTITY_FIELDS[key];
-			const spaceId = (event as Record<string, unknown>)[spaceKey];
+			const spaceId = (event as unknown as Record<string, unknown>)[spaceKey];
 			if (typeof spaceId === "string") {
 				formatted = `[\`${value}\`](${geoEntityUrl(spaceId, value)})`;
 			} else {
