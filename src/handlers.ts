@@ -16,7 +16,6 @@ import type {
 	ProposalVotedEvent,
 } from "./types"
 
-const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL
 
 function handleProposalCreated(event: ProposalCreatedEvent): void {
 	console.log(
@@ -66,7 +65,7 @@ function handleBountyPayout(event: BountyPayoutEvent): void {
 	)
 }
 
-export async function handleEvent(event: GeoWebhookEvent): Promise<void> {
+export async function handleEvent(event: GeoWebhookEvent, discordWebhookUrl?: string): Promise<void> {
 	switch (event.event_type) {
 		case "proposal_created":
 			handleProposalCreated(event)
@@ -99,9 +98,9 @@ export async function handleEvent(event: GeoWebhookEvent): Promise<void> {
 			console.warn(`[unknown event_type] ${(event as { event_type: string }).event_type}`)
 	}
 
-	if (DISCORD_WEBHOOK_URL) {
+	if (discordWebhookUrl) {
 		try {
-			await sendToDiscord(DISCORD_WEBHOOK_URL, event)
+			await sendToDiscord(discordWebhookUrl, event)
 		} catch (err) {
 			console.error("[discord] failed to send, continuing", err)
 		}

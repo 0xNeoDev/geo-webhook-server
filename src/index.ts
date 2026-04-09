@@ -4,16 +4,14 @@ import { handleEvent } from "./handlers"
 import { verifySignature } from "./signature"
 import type { GeoWebhookEvent } from "./types"
 
-const app = new Hono()
-const dedup = new IdempotencyStore()
-
-const WEBHOOK_SECRET = process.env.GEO_WEBHOOK_SECRET
-if (!WEBHOOK_SECRET) {
-	console.error("GEO_WEBHOOK_SECRET environment variable is required")
-	process.exit(1)
+export type Env = {
+	GEO_WEBHOOK_SECRET: string
+	DISCORD_WEBHOOK_URL?: string
 }
 
-const PORT = Number(process.env.PORT) || 3000
+const app = new Hono<{ Bindings: Env }>()
+const dedup = new IdempotencyStore()
+
 const MAX_BODY_BYTES = 64 * 1024 // 64 KB — webhook payloads are small JSON
 
 // Health check
@@ -21,6 +19,11 @@ app.get("/health", (c) => c.json({ status: "ok" }))
 
 // Webhook endpoint
 app.post("/webhooks/geo", async (c) => {
+	const secret = c.env.GEO_WEBHOOK_SECRET
+	if (!secret) {
+		return c.text("server misconfigured: missing GEO_WEBHOOK_SECRET", 500)
+	}
+
 	const signatureHeader = c.req.header("x-geo-signature")
 	if (!signatureHeader) {
 		return c.text("missing signature", 401)
@@ -33,7 +36,7 @@ app.post("/webhooks/geo", async (c) => {
 		return c.text("payload too large", 413)
 	}
 
-	if (!verifySignature(rawBody, WEBHOOK_SECRET, signatureHeader)) {
+	if (!(await verifySignature(rawBody, secret, signatureHeader))) {
 		return c.text("invalid signature", 401)
 	}
 
@@ -50,15 +53,10 @@ app.post("/webhooks/geo", async (c) => {
 		return c.text("duplicate", 409)
 	}
 
-	await handleEvent(event)
+	await handleEvent(event, c.env.DISCORD_WEBHOOK_URL)
 
 	dedup.add(event.idempotency_key)
 	return c.text("ok", 200)
 })
 
-console.log(`Geo webhook server listening on :${PORT}`)
-
-export default {
-	port: PORT,
-	fetch: app.fetch,
-}
+export default app

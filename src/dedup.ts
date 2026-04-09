@@ -1,8 +1,9 @@
 // In-memory idempotency store with TTL-based eviction.
 // For production, swap this with Redis or a database-backed store.
+// No timers in global scope — compatible with Cloudflare Workers.
 
 const DEFAULT_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
-const EVICTION_INTERVAL_MS = 60 * 60 * 1000 // 1 hour
+const MAX_ENTRIES = 10000
 
 interface Entry {
 	expiresAt: number
@@ -10,11 +11,8 @@ interface Entry {
 
 export class IdempotencyStore {
 	private seen = new Map<string, Entry>()
-	private timer: ReturnType<typeof setInterval>
 
-	constructor(private ttlMs = DEFAULT_TTL_MS) {
-		this.timer = setInterval(() => this.evict(), EVICTION_INTERVAL_MS)
-	}
+	constructor(private ttlMs = DEFAULT_TTL_MS) {}
 
 	/** Returns true if this key was already processed. */
 	has(key: string): boolean {
@@ -28,6 +26,10 @@ export class IdempotencyStore {
 	}
 
 	add(key: string): void {
+		// Evict expired entries when approaching capacity
+		if (this.seen.size >= MAX_ENTRIES) {
+			this.evict()
+		}
 		this.seen.set(key, { expiresAt: Date.now() + this.ttlMs })
 	}
 
@@ -45,6 +47,6 @@ export class IdempotencyStore {
 	}
 
 	close(): void {
-		clearInterval(this.timer)
+		// No-op — kept for test compatibility
 	}
 }
