@@ -1,5 +1,4 @@
 [install]
-minAge = "7d"
-
-[install.scopes]
-"@geoprotocol" = { minAge = "0" }
+# Only install package versions published at least 14 days ago (1209600 seconds)
+minimumReleaseAge = 1209600
+minimumReleaseAgeExcludes = ["@geoprotocol/geo-sdk"]
