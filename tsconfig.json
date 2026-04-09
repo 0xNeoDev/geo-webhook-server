@@ -7,7 +7,7 @@
 		"skipLibCheck": true,
 		"noEmit": true,
 		"esModuleInterop": true,
-		"types": ["bun-types"]
+		"types": ["bun-types", "@cloudflare/workers-types"]
 	},
 	"include": ["src/**/*.ts"]
 }

@@ -7,89 +7,96 @@ export type GovernanceEventType =
 	| "proposal_voted"
 	| "proposal_executed"
 	| "proposal_settings_updated"
-	| "proposal_rejected"
+	| "proposal_rejected";
 
-export type BountyEventType = "bounty_interest" | "bounty_allocated" | "bounty_payout"
+export type BountyEventType = "bounty_interest" | "bounty_allocated" | "bounty_payout";
 
-export type EventType = GovernanceEventType | BountyEventType
+export type EventType = GovernanceEventType | BountyEventType;
 
-export type EventCategory = "governance" | "bounty"
+export type EventCategory = "governance" | "bounty";
 
 // Fields present on every event
 // Optional fields use `?` because the Rust serializer omits None values entirely
 export interface BaseEvent {
-	version?: number
-	event_type: EventType
-	category?: EventCategory
-	space_id: string
-	user_space_id?: string
-	idempotency_key?: string
-	block_number?: number // absent for proposal_rejected
-	timestamp?: number
+	version?: number;
+	event_type: EventType;
+	category?: EventCategory;
+	space_id: string;
+	user_space_id?: string;
+	idempotency_key?: string;
+	block_number?: number; // absent for proposal_rejected
+	timestamp?: number;
+	space_name?: string; // best-effort human-readable name from KG
 }
 
 // Governance events
 export interface ProposalCreatedEvent extends BaseEvent {
-	event_type: "proposal_created"
-	proposal_id: string
-	proposer_id: string
+	event_type: "proposal_created";
+	proposal_id: string;
+	proposer_id: string;
 }
 
 export interface ProposalUpdatedEvent extends BaseEvent {
-	event_type: "proposal_updated"
-	proposal_id: string
-	proposer_id: string
+	event_type: "proposal_updated";
+	proposal_id: string;
+	proposer_id: string;
 }
 
 export interface ProposalVotedEvent extends BaseEvent {
-	event_type: "proposal_voted"
-	proposal_id: string
-	voter_id: string
-	vote: "yes" | "no" | "abstain" | "unknown"
+	event_type: "proposal_voted";
+	proposal_id: string;
+	voter_id: string;
+	vote: "yes" | "no" | "abstain" | "unknown";
 }
 
 export interface ProposalExecutedEvent extends BaseEvent {
-	event_type: "proposal_executed"
-	proposal_id: string
+	event_type: "proposal_executed";
+	proposal_id: string;
 }
 
 export interface ProposalSettingsUpdatedEvent extends BaseEvent {
-	event_type: "proposal_settings_updated"
-	proposal_id: string
+	event_type: "proposal_settings_updated";
+	proposal_id: string;
 }
 
 export interface ProposalRejectedEvent extends BaseEvent {
-	event_type: "proposal_rejected"
-	proposal_id: string
-	proposer_id: string
+	event_type: "proposal_rejected";
+	proposal_id: string;
+	proposer_id: string;
 }
 
 // Bounty events
 export interface BountyInterestEvent extends BaseEvent {
-	event_type: "bounty_interest"
-	bounty_entity_id: string
-	relation_id: string
-	curator_space_id: string
-	bounty_space_id: string
-	interested_user_space_id: string
+	event_type: "bounty_interest";
+	bounty_entity_id: string;
+	relation_id: string;
+	curator_space_id: string;
+	bounty_space_id: string;
+	interested_user_space_id: string;
+	bounty_name?: string;
+	curator_name?: string;
 }
 
 export interface BountyAllocatedEvent extends BaseEvent {
-	event_type: "bounty_allocated"
-	bounty_entity_id: string
-	relation_id: string
-	curator_space_id: string
-	bounty_space_id: string
-	proposal_id: string
+	event_type: "bounty_allocated";
+	bounty_entity_id: string;
+	relation_id: string;
+	curator_space_id: string;
+	bounty_space_id: string;
+	proposal_id?: string;
+	bounty_name?: string;
+	curator_name?: string;
 }
 
 export interface BountyPayoutEvent extends BaseEvent {
-	event_type: "bounty_payout"
-	bounty_entity_id: string
-	relation_id: string
-	curator_space_id: string
-	bounty_space_id: string
-	proposal_id: string
+	event_type: "bounty_payout";
+	bounty_entity_id: string;
+	relation_id: string;
+	curator_space_id: string;
+	bounty_space_id: string;
+	proposal_id?: string;
+	bounty_name?: string;
+	curator_name?: string;
 }
 
 export type GeoWebhookEvent =
@@ -101,4 +108,4 @@ export type GeoWebhookEvent =
 	| ProposalRejectedEvent
 	| BountyInterestEvent
 	| BountyAllocatedEvent
-	| BountyPayoutEvent
+	| BountyPayoutEvent;

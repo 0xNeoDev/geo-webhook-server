@@ -1,29 +1,34 @@
 // HMAC-SHA256 signature verification for Geo webhook payloads.
 // The delivery-worker signs each request with: X-Geo-Signature: sha256={hmac_hex}
+// Uses Web Crypto API — works on Cloudflare Workers, Bun, Node, and Deno.
 
-const SIGNATURE_PREFIX = "sha256="
+const SIGNATURE_PREFIX = "sha256=";
+const encoder = new TextEncoder();
 
-export function verifySignature(rawBody: ArrayBuffer, secret: string, signatureHeader: string): boolean {
+function hexEncode(buf: ArrayBuffer): string {
+	return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+export async function verifySignature(rawBody: ArrayBuffer, secret: string, signatureHeader: string): Promise<boolean> {
 	if (!signatureHeader.startsWith(SIGNATURE_PREFIX)) {
-		return false
+		return false;
 	}
 
-	const received = signatureHeader.slice(SIGNATURE_PREFIX.length)
+	const received = signatureHeader.slice(SIGNATURE_PREFIX.length);
 
-	const key = new Bun.CryptoHasher("sha256", secret)
-	key.update(new Uint8Array(rawBody))
-	const expected = key.digest("hex")
+	const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, [
+		"sign",
+	]);
+	const sig = await crypto.subtle.sign("HMAC", key, rawBody);
+	const expected = hexEncode(sig);
 
 	// Constant-time comparison
 	if (received.length !== expected.length) {
-		return false
+		return false;
 	}
-
-	// Use subtle crypto for timing-safe comparison when available,
-	// otherwise fall back to byte-by-byte with constant-time accumulator
-	let mismatch = 0
+	let mismatch = 0;
 	for (let i = 0; i < received.length; i++) {
-		mismatch |= received.charCodeAt(i) ^ expected.charCodeAt(i)
+		mismatch |= received.charCodeAt(i) ^ expected.charCodeAt(i);
 	}
-	return mismatch === 0
+	return mismatch === 0;
 }

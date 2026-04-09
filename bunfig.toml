@@ -1,0 +1,4 @@
+[install]
+# Only install package versions published at least 14 days ago (1209600 seconds)
+minimumReleaseAge = 1209600
+minimumReleaseAgeExcludes = ["@geoprotocol/geo-sdk"]
