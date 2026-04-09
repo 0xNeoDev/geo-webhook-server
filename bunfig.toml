@@ -1,0 +1,5 @@
+[install]
+minAge = "7d"
+
+[install.scopes]
+"@geoprotocol" = { minAge = "0" }
